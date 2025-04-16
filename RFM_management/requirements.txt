@@ -1,0 +1,15 @@
+# Core FastAPI
+fastapi
+uvicorn[standard] # Includes standard dependencies like websockets, needed by FastAPI/Uvicorn
+
+# Database (PostgreSQL driver + SQLAlchemy ORM)
+psycopg2-binary # Easier install for dev/Docker, use psycopg2 in prod if needed
+SQLAlchemy
+
+# Spark (for the batch processor)
+pyspark>=3.0.0 # Specify a version if necessary
+
+# Pydantic (already a FastAPI dependency, but good to list explicitly)
+pydantic
+
+# Add any other dependencies your application might need
