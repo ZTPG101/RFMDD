@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Verify You Are Human</title>
+    <!-- reCAPTCHA API script -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <style>
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Please Verify</h1>
+    <p>To protect against automated access, please complete the CAPTCHA below.</p>
+
+    <!-- Display flashed messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul>
+        {% for category, message in messages %}
+          <li class="{{ category }}">{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}  
+    {% endwith %}
+
+    <form action="{{ url_for('verify_captcha_page') }}" method="POST">
+        <!-- The reCAPTCHA widget -->
+        <!-- IMPORTANT: Make sure site_key is passed correctly from Flask -->
+        <div class="g-recaptcha" data-sitekey="{{ site_key }}"></div>
+        <br/>
+        <button type="submit">Verify</button>
+    </form>
+
+    <p><a href="{{ url_for('index') }}">Cancel and go Home</a></p>
+</body>
+</html>

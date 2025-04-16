@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Verification Successful</title>
+</head>
+<body>
+    <h1>Verification Successful!</h1>
+    <p>You have been verified as human for this session.</p>
+    <p><a href="{{ intended_url or url_for('index') }}">Continue to your destination</a></p>
+    <p><a href="{{ url_for('index') }}">Go Home</a></p>
+</body>
+</html>
