@@ -1,10 +1,8 @@
-from locust import HttpUser, TaskSet, task, between
+from locust import HttpUser, task, between
 
-class UserBehavior(TaskSet):
+class DDoSSimulation(HttpUser):
+    wait_time = between(0.01, 0.05)  # Very rapid requests (tune as needed)
+
     @task
-    def get_home(self):
-        self.client.get("/")
-
-class WebsiteUser(HttpUser):
-    tasks = [UserBehavior]
-    wait_time = between(1, 2.5)
+    def flood(self):
+        self.client.get("/")  # Simulate a GET flood to the root endpoint
