@@ -1,13 +1,24 @@
-# Core FastAPI
+# Core FastAPI & Server
 fastapi
-uvicorn[standard] # Includes standard dependencies like websockets, needed by FastAPI/Uvicorn
+uvicorn[standard]
 
 # Database (PostgreSQL driver + SQLAlchemy ORM)
-psycopg2-binary # Easier install for dev/Docker, use psycopg2 in prod if needed
+psycopg2-binary
 SQLAlchemy
 
 # Spark (for the batch processor)
-pyspark>=3.0.0 # Specify a version if necessary
+pyspark>=3.0.0
 
-# Pydantic (already a FastAPI dependency, but good to list explicitly)
-pydantic
+# Pydantic (FastAPI dependency, includes email validation)
+pydantic[email] # Add [email] extra for EmailStr validation
+
+# For sending emails (standard library, but good practice)
+# (No external package needed for smtplib/email)
+
+# For reading .env files locally (useful for dev)
+python-dotenv
+
+# Testing frameworks (needed for unit/functional tests)
+pytest
+requests
+httpx # Recommended for FastAPI TestClient async support
