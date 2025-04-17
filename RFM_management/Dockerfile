@@ -1,15 +1,10 @@
+FROM python:3.13-slim
 
-# Use an official Python runtime as a parent image
-FROM python:3.10-slim
-
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 ENV APP_HOME=/app
 WORKDIR $APP_HOME
 
-# Install necessary system packages (Java is required for Spark)
-# Using Debian 'slim' image, need to install default-jre
 RUN apt-get update && apt-get install -y --no-install-recommends \
     default-jre-headless \
     # Add build-essential and libpq-dev if using psycopg2 (non-binary)
@@ -17,18 +12,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first to leverage Docker cache
 COPY requirements.txt .
 
-# Install Python dependencies
-# Consider using virtual environments if needed
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application code
 COPY . .
 
 # Expose the port the API runs on (defined in rfm_api.py/uvicorn command)
-EXPOSE 8000
+EXPOSE 8000     
 
 # Default command to run the FastAPI application
 # The batch job can be run using 'docker-compose run app python rfm_batch_processor.py'

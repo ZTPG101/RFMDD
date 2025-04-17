@@ -1,10 +1,10 @@
 
 from pyspark.sql import SparkSession, Window
 from pyspark.sql import functions as F
-from pyspark.sql.types import TimestampType, StringType, LongType, StructType, StructField, FloatType # Added FloatType
+from pyspark.sql.types import TimestampType, StringType, LongType, StructType, StructField, FloatType
 import datetime
 import math
-import os # For checking directories
+import os
 
 # Import from the updated database_utils
 # These functions now exist and use environment variables via database_utils
@@ -230,8 +230,8 @@ if __name__ == "__main__":
             .master("local[*]") \
             .config("spark.jars.packages", "org.postgresql:postgresql:42.7.3") \
             .config("spark.sql.legacy.timeParserPolicy", "LEGACY") \
-            .config("spark.sql.adaptive.enabled", "true") # Optional: Adaptive Query Execution
-            .config("spark.driver.memory", "1g") # Adjust memory as needed
+            .config("spark.sql.adaptive.enabled", "true") \
+            .config("spark.driver.memory", "1g") \
             .getOrCreate()
 
         print("Spark Session initialized successfully.")

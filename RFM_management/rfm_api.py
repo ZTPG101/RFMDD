@@ -1,13 +1,11 @@
 
 from fastapi import FastAPI, Depends, HTTPException, Path
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field # Use Field for examples/validation
+from pydantic import BaseModel, Field
 import uvicorn
-import os # For potential future config
+import os
 
-# Import necessary components from the updated database_utils
-# These now correctly provide the SQLAlchemy model and session generator
-from database_utils import RFMScore, get_db, create_db_and_tables, engine # Import engine for check
+from database_utils import RFMScore, get_db, create_db_and_tables, engine
 
 # Create DB tables if they don't exist when the API starts
 # NOTE: In production, use migrations (e.g., Alembic) instead of create_all on startup.
@@ -21,7 +19,7 @@ else:
 app = FastAPI(
     title="RFM Score Lookup API",
     description="Provides RFM scores for IP addresses based on batch processing.",
-    version="1.0.1" # Incremented version
+    version="1.0.1"
 )
 
 # Define a Pydantic response model for better validation and documentation
