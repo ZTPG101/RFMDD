@@ -3,8 +3,8 @@ import os
 import psycopg2
 import psycopg2.extras
 from contextlib import contextmanager
-from sqlalchemy import create_engine, Column, String, Float, DateTime # Added SQLAlchemy types
-from sqlalchemy.orm import sessionmaker, declarative_base, Session # Added Session handling
+from sqlalchemy import create_engine, Column, String, Float, DateTime
+from sqlalchemy.orm import sessionmaker, declarative_base, Session
 from sqlalchemy.sql import func # For potential default timestamps
 import datetime
 
@@ -13,7 +13,7 @@ import datetime
 DB_NAME = os.getenv('POSTGRES_DB', 'mydatabase')
 DB_USER = os.getenv('POSTGRES_USER', 'user')
 DB_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'password')
-DB_HOST = os.getenv('POSTGRES_HOST', 'db') # 'db' is the service name in docker-compose
+DB_HOST = os.getenv('POSTGRES_HOST', 'db')
 DB_PORT = os.getenv('POSTGRES_PORT', '5432')
 
 # --- SQLAlchemy Setup ---

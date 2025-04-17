@@ -11,5 +11,3 @@ pyspark>=3.0.0 # Specify a version if necessary
 
 # Pydantic (already a FastAPI dependency, but good to list explicitly)
 pydantic
-
-# Add any other dependencies your application might need
