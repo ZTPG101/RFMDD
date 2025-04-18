@@ -20,5 +20,6 @@ python-dotenv
 
 # Testing frameworks (needed for unit/functional tests)
 pytest
+itsdangerous>=2.0
 requests
 httpx # Recommended for FastAPI TestClient async support

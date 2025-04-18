@@ -29,7 +29,7 @@ from database_utils import (
 SMTP_SERVER = os.getenv("SMTP_SERVER", "mailhog")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "1025"))
 SENDER_EMAIL = os.getenv("SENDER_EMAIL", "noreply@example.com")
-SENDER_PASSWORD = os.getenv("SENDER_PASSWORD")
+SENDER_PASSWORD = os.getenv("noreply")
 API_HOST = os.getenv("API_HOST", "0.0.0.0")
 API_PORT = int(os.getenv("API_PORT", "8000"))
 TOKEN_EXPIRATION_MINUTES = int(os.getenv("TOKEN_EXPIRATION_MINUTES", "30"))
@@ -37,9 +37,9 @@ TOKEN_EXPIRATION_MINUTES = int(os.getenv("TOKEN_EXPIRATION_MINUTES", "30"))
 # --- NEW Configuration for CAPTCHA and Sessions ---
 # IMPORTANT: Generate a strong, unique secret key for production!
 # Use: python -c 'import os; print(os.urandom(24))'
-APP_SECRET_KEY = os.getenv("APP_SECRET_KEY", "default_insecure_secret_key_replace_me") # CHANGE THIS!
-RECAPTCHA_SITE_KEY = os.getenv("RECAPTCHA_SITE_KEY", "YOUR_RECAPTCHA_V2_SITE_KEY") # From Google Admin
-RECAPTCHA_SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY", "YOUR_RECAPTCHA_V2_SECRET_KEY") # From Google Admin
+APP_SECRET_KEY = os.getenv("c3eea4e72ec11981e2c48798c13f634679b7c955433ae647", "default_insecure_secret_key_replace_me")
+RECAPTCHA_SITE_KEY = os.getenv("6LcvnhorAAAAACkm2jzB1gGUvDkHgFGrHbRDi5R6", "YOUR_RECAPTCHA_V2_SITE_KEY")
+RECAPTCHA_SECRET_KEY = os.getenv("6LcvnhorAAAAAN8BYM_6Bklvojrtrm9eOxhcHV2b", "YOUR_RECAPTCHA_V2_SECRET_KEY")
 RECAPTCHA_VERIFY_URL = 'https://www.google.com/recaptcha/api/siteverify'
 # Define RFM Score Threshold for triggering CAPTCHA (Example)
 RFM_COMPOSITE_THRESHOLD = float(os.getenv("RFM_COMPOSITE_THRESHOLD", "400.0")) # e.g., Trigger if score > 400
