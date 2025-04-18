@@ -79,9 +79,34 @@ services:
     # Command is in Dockerfile
     restart: unless-stopped
 
+  attacker1:
+    build: ./locust
+    container_name: attacker1
+    networks:
+      ddosnet:
+        ipv4_address: 172.28.0.11
+    depends_on:
+      - target_app
+    command: ["locust", "-f", "locustfile.py", "--headless", "-u", "50", "-r", "10", "--host=http://target_app:8000"]
+
+  attacker2:
+    build: ./locust
+    container_name: attacker2
+    networks:
+      ddosnet:
+        ipv4_address: 172.28.0.12
+    depends_on:
+      - target_app
+    command: ["locust", "-f", "locustfile.py", "--headless", "-u", "50", "-r", "10", "--host=http://target_app:8000"]
+
 networks:
   app_network:
     driver: bridge
+  ddosnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
 
 volumes:
   postgres_data:
