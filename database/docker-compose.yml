@@ -1,0 +1,43 @@
+services:
+  # PostgreSQL Database Service
+  db:
+    image: postgres:15 # Use a specific version (e.g., 15) or 'latest'
+    container_name: postgres_db_rfm # Optional: Give the container a specific name
+    restart: unless-stopped # Restart policy
+    environment:
+      # IMPORTANT: Change these default credentials!
+      POSTGRES_USER: rfmuser        # Your desired database username
+      POSTGRES_PASSWORD: rfm_password_CHANGE_ME # Your desired database password
+      POSTGRES_DB: rfmdb            # The initial database to create
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Persist database data
+    networks:
+      - db_network # Connect to the custom network
+
+  # pgAdmin Web Interface Service
+  pgadmin:
+    image: dpage/pgadmin4:latest # Use latest or a specific pgAdmin version
+    container_name: pgadmin4_rfm # Optional: Give the container a specific name
+    restart: unless-stopped
+    environment:
+      # IMPORTANT: Change these default credentials!
+      PGADMIN_DEFAULT_EMAIL: admin@example.com      # Login email for pgAdmin web UI
+      PGADMIN_DEFAULT_PASSWORD: admin_password_CHANGE_ME # Login password for pgAdmin web UI
+    ports:
+      - "5050:80" # Map host port 5050 to container port 80 (pgAdmin default)
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin # Persist pgAdmin settings/servers
+    networks:
+      - db_network # Connect to the custom network
+    depends_on:
+      - db # Wait for the db service to start first
+
+# Define named volumes for data persistence
+volumes:
+  postgres_data: # Data for the PostgreSQL database
+  pgadmin_data:  # Data for pgAdmin (like saved server configurations)
+
+# Define a custom network for services to communicate
+networks:
+  db_network:
+    driver: bridge
