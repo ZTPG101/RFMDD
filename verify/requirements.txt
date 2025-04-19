@@ -1,7 +1,7 @@
 # Core FastAPI & Server
-fastapi
-uvicorn[standard]
-
+# fastapi
+# uvicorn[standard]
+flask
 # Database (PostgreSQL driver + SQLAlchemy ORM)
 psycopg2-binary
 SQLAlchemy

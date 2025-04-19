@@ -1,5 +1,4 @@
-
-version: '3.8'
+# version: '3.8'
 
 services:
   db:
@@ -35,17 +34,9 @@ services:
     depends_on: { db: { condition: service_healthy } }
     restart: unless-stopped
 
-  mailhog:
-    image: mailhog/mailhog:latest
-    container_name: mailhog_service
-    ports: ["1025:1025", "8025:8025"]
-    networks: 
-      - app_network
-    restart: unless-stopped
-
-  app:
-    build: .
-    container_name: my_python_app
+  rfm_manager:
+    build: ./RFM_management
+    container_name: rfm_manager
     environment:
       # --- Database ---
       POSTGRES_DB: ${POSTGRES_DB:-mydatabase}
@@ -53,11 +44,6 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_HOST: db
       POSTGRES_PORT: 5432
-      # --- SMTP ---
-      SMTP_SERVER: ${SMTP_SERVER:-mailhog}
-      SMTP_PORT: ${SMTP_PORT:-1025}
-      SENDER_EMAIL: ${SENDER_EMAIL:-noreply@example.com}
-      SENDER_PASSWORD: ${SENDER_PASSWORD:-noreply}
       # --- Verification & Session ---
       TOKEN_EXPIRATION_MINUTES: ${TOKEN_EXPIRATION_MINUTES:-30}
       APP_SECRET_KEY: ${APP_SECRET_KEY:-c3eea4e72ec11981e2c48798c13f634679b7c955433ae647}
@@ -73,7 +59,7 @@ services:
       API_HOST: 0.0.0.0
       API_PORT: 8000
     volumes:
-      - .:/app
+      - ./RFM_management:/app
       - ./network_logs:/app/network_logs
       # - ./templates:/app/templates # Mount templates (optional, usually copied in Dockerfile)
     ports:
@@ -82,9 +68,31 @@ services:
       - app_network
     depends_on:
       db: { condition: service_healthy }
-      mailhog: { condition: service_started }
     # Command is in Dockerfile
     restart: unless-stopped
+
+  web:
+    build:
+      context: ./verify # Use the Dockerfile in the current directory
+      # Optional: Pass build arguments like the port
+
+    environment:
+      # --- reCAPTCHA v2 ---
+      APP_SECRET_KEY: ${APP_SECRET_KEY:-c3eea4e72ec11981e2c48798c13f634679b7c955433ae647}
+      RECAPTCHA_SITE_KEY: 6LcvnhorAAAAACkm2jzB1gGUvDkHgFGrHbRDi5R6
+      RECAPTCHA_SECRET_KEY: 6LcvnhorAAAAAN8BYM_6Bklvojrtrm9eOxhcHV2b
+    container_name: flask_recaptcha_app # Optional: A friendly name for the container
+    ports:
+      # Map port 5000 on the host to the FLASK_RUN_PORT inside the container
+      # The internal port comes from the .env file (defaulting to 5000 if not set)
+      - "5000:${FLASK_RUN_PORT:-5000}"
+    volumes:
+      - ./verify:/app
+    env_file:
+      - .env # Load environment variables from the .env file
+    restart: unless-stopped # Optional: Policy for restarting the container
+    networks: # Optional: Define networks if connecting to other services (like a DB)
+      - app_network
 
 networks:
   app_network:
