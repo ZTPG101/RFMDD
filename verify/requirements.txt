@@ -1,2 +1,33 @@
-Flask
+# Core FastAPI & Server
+fastapi
+uvicorn[standard]
+
+# Database (PostgreSQL driver + SQLAlchemy ORM)
+psycopg2-binary
+SQLAlchemy
+
+# Spark (for the batch processor)
+pyspark>=3.0.0
+
+# Pydantic (FastAPI dependency, includes email validation)
+pydantic[email]
+
+# For reading .env files locally (useful for dev)
+python-dotenv
+
+# Templating Engine
+Jinja2
+
+# FastAPI Forms (needed for reading form data like g-recaptcha-response)
+python-multipart
+
+# Async HTTP Client (better than requests for async frameworks)
+httpx
+
+# Session Middleware Dependency (signed cookies)
+itsdangerous
+
+# Testing frameworks
+pytest
 requests
+# httpx is already included above
