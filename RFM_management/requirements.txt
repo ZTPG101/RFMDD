@@ -23,3 +23,4 @@ pytest
 itsdangerous>=2.0
 requests
 httpx # Recommended for FastAPI TestClient async support
+jinja2

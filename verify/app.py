@@ -9,11 +9,11 @@ app = Flask(__name__)
 # --- Configuration ---
 # IMPORTANT: Set a strong secret key for Flask sessions!
 # You can generate one using: python -c 'import os; print(os.urandom(16))'
-app.secret_key = b'c3eea4e72ec11981e2c48798c13f634679b7c955433ae647' # Replace with YOUR generated key
+app.secret_key = os.getenv("APP_SECRET_KEY") # Replace with YOUR generated key
 
 # Replace with your actual reCAPTCHA keys from Google Admin Console
-RECAPTCHA_SITE_KEY = "6LcvnhorAAAAACkm2jzB1gGUvDkHgFGrHbRDi5R6"  # Used in HTML
-RECAPTCHA_SECRET_KEY = "6LcvnhorAAAAAN8BYM_6Bklvojrtrm9eOxhcHV2b" # Used for server-side verification
+RECAPTCHA_SITE_KEY = os.getenv("RECAPTCHA_SITE_KEY") # Used in HTML
+RECAPTCHA_SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY") # Used for server-side verification
 RECAPTCHA_VERIFY_URL = 'https://www.google.com/recaptcha/api/siteverify'
 
 TIME_WINDOW = 60
