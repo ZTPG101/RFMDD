@@ -26,7 +26,8 @@ services:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-adminsecret}
       PGADMIN_LISTEN_PORT: 80
-      ports: 5050:80
+    ports: 
+      - 5050:80
     volumes: 
       - pgadmin_data:/var/lib/pgadmin
     networks: 
@@ -62,6 +63,7 @@ services:
       - ./RFM_management:/app
       - ./network_logs:/app/network_logs
       # - ./templates:/app/templates # Mount templates (optional, usually copied in Dockerfile)
+      - ../Database:/app/
     ports:
       - "${API_PORT:-8000}:8000"
     networks:
@@ -93,6 +95,7 @@ services:
     restart: unless-stopped # Optional: Policy for restarting the container
     networks: # Optional: Define networks if connecting to other services (like a DB)
       - app_network
+      - ../Database:/app/
 
 networks:
   app_network:

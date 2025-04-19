@@ -38,17 +38,6 @@ class RFMScore(Base):
     m_score = Column(Float, nullable=False)
     composite_score = Column(Float, nullable=True)
     last_updated = Column(String, nullable=False)
-
-class VerificationToken(Base):
-    __tablename__ = "verification_tokens"
-
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, nullable=False, index=True)
-    token = Column(String, unique=True, nullable=False, index=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    expires_at = Column(DateTime(timezone=True), nullable=False)
-    is_used = Column(Boolean, default=False, nullable=False)
-
     # Optional: Add a relationship if you have a User table
     # user_email = Column(String, ForeignKey('users.email'))
 
@@ -72,7 +61,7 @@ def create_db_and_tables():
         with engine.connect() as connection:
              print("Database connection successful for table creation.")
         Base.metadata.create_all(bind=engine)
-        print(f"Tables (including '{RFMScore.__tablename__}', '{VerificationToken.__tablename__}') created or verified.")
+        print(f"Tables (including '{RFMScore.__tablename__}', created or verified.")
     except Exception as e:
         print(f"[ERROR] Could not create tables: {e}")
 
@@ -89,3 +78,5 @@ def get_jdbc_properties():
 
 # --- Direct psycopg2 Functions (Keep Existing, optional) ---
 # ... (get_db_connection, managed_cursor) ...
+if __name__ == "__main__":
+    create_db_and_tables()
