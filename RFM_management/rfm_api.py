@@ -81,7 +81,7 @@ def RFMlookup(ip_address: str = Path(...), db: Session = Depends(get_db)): # ...
 @app.get( # ... (keep existing decorator and signature) ...
     "/rfm/{ip_address}", response_model=RFMResponse, tags=["RFM Lookup"], #...
 )
-async def is_potential_ddos(db: Session, client_ip: str) -> bool:
+async def is_potential_ddos(db: Session, client_ip: str) -> str:
     """
     Checks if the client IP is suspicious based on RFM score.
     Returns True if suspicious (requires CAPTCHA), False otherwise.
@@ -107,8 +107,8 @@ async def is_potential_ddos(db: Session, client_ip: str) -> bool:
         else:
             # No score found - decide how to handle this.
             # Options: Treat as not suspicious, treat as suspicious, use default score?
-            print(f"No RFM score found for {client_ip}. Treating as not suspicious.")
-            return False
+            print(f"No RFM score found for {client_ip}.checking if he is human.")
+            return "need captcha"
 
     except Exception as e:
         print(f"[ERROR] Database error checking RFM score for {client_ip}: {e}")
