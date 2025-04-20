@@ -21,7 +21,7 @@ MAX_REQUESTS = 100 # Lowered for easier testing/simulation if needed
 
 # --- Logging Configuration ---
 LOG_DIR = 'network_logs' # Directory to store logs (relative to app.py)
-LOG_FILE = os.path.join(LOG_DIR, f"requests_{datetime.now().strftime('%Y%m%d')}.csv") # Daily log files
+LOG_FILE = os.path.join(LOG_DIR, f"requests.csv") # Daily log file  _{datetime.now().strftime('%Y%m%d')}
 LOG_HEADER = LOG_HEADER = ['timestamp', 'client_ip', 'src_port', 'method', 'path', 'http_body_length', 'user_agent', 'referer']
 
 # --- Global State (In-memory Rate Limiting) ---
