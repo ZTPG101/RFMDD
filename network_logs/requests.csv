@@ -1,0 +1,12 @@
+timestamp,client_ip,src_port,method,path,http_body_length,user_agent,referer
+2025-04-20T07:37:38.631366,172.30.0.1,43494,GET,/,0,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0",
+2025-04-20T07:37:42.199076,172.30.0.1,43498,GET,/sensitive-data,0,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0",http://127.0.0.1:5000/
+2025-04-20T07:37:45.626870,172.30.0.1,43500,GET,/,0,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0",http://127.0.0.1:5000/sensitive-data
+2025-04-20T07:37:46.957034,172.30.0.1,43512,GET,/sensitive-data,0,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0",http://127.0.0.1:5000/
+2025-04-20T07:37:47.743828,172.30.0.1,43526,GET,/,0,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0",http://127.0.0.1:5000/sensitive-data
+2025-04-20T07:37:48.239554,172.30.0.1,35680,GET,/sensitive-data,0,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0",http://127.0.0.1:5000/
+2025-04-20T07:37:48.834721,172.30.0.1,35686,GET,/,0,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0",http://127.0.0.1:5000/sensitive-data
+2025-04-20T07:41:22.717199,172.30.0.1,55126,GET,/sensitive-data,0,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0",http://127.0.0.1:5000/
+2025-04-20T07:41:24.243892,172.30.0.1,55132,GET,/,0,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0",http://127.0.0.1:5000/sensitive-data
+2025-04-20T07:41:27.330679,172.30.0.1,55142,GET,/sensitive-data,0,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0",http://127.0.0.1:5000/
+2025-04-20T07:41:29.449212,172.30.0.1,55158,GET,/,0,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0",http://127.0.0.1:5000/sensitive-data

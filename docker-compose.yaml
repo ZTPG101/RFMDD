@@ -1,4 +1,4 @@
-version: "3.8"
+# version: "3.8"
 
 ###############################################################################
 #                               NETWORKS                                     #
@@ -94,6 +94,7 @@ services:
       - ./RFM_management:/app
       - ./network_logs:/app/network_logs
       - ../Database:/app
+      - ./RFM_table:/app/RFM_table
     ports:
       - "${API_PORT:-8000}:8000"
     networks:
@@ -102,6 +103,7 @@ services:
     depends_on:
       - db
     restart: unless-stopped
+    
 
 # ----------------------------- TARGET WEB APP ------------------------------ #
   web:
@@ -126,6 +128,8 @@ services:
       timeout: 3s
       retries: 3
     restart: unless-stopped
+    volumes:
+      - ./network_logs:/app/network_logs
 
 # ----------------------------- LOCUST ATTACKERS ---------------------------- #
   attacker:

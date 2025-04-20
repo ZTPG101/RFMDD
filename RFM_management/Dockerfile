@@ -8,11 +8,12 @@ WORKDIR $APP_HOME
 
 RUN apt-get update && apt-get install -y --no-install-recommends default-jre-headless && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-
+# COPY requirements.txt .
+COPY ./RFM_management .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+
+COPY ./Database/database_utils.py .
 
 RUN mkdir -p $APP_HOME/network_logs
 RUN mkdir -p $APP_HOME/templates # Ensure templates dir exists if not copied explicitly
