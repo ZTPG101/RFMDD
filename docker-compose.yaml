@@ -31,44 +31,62 @@ volumes:
 
 # --------------------------- DATABASE & TOOLS ------------------------------ #
 services:
-  db:
-    image: postgres:15
-    container_name: postgres_db
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-mydatabase}
-      POSTGRES_USER: ${POSTGRES_USER:-user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      prod_net:
-        ipv4_address: 172.30.0.2
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user} -d ${POSTGRES_DB:-mydatabase}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  # db:
+  #   image: postgres:15
+  #   container_name: postgres_db
+  #   environment:
+  #     POSTGRES_DB: ${POSTGRES_DB:-mydatabase}
+  #     POSTGRES_USER: ${POSTGRES_USER:-user}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     prod_net:
+  #       ipv4_address: 172.30.0.2
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user} -d ${POSTGRES_DB:-mydatabase}"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
 
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: pgadmin4_container
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-adminsecret}
-      PGADMIN_LISTEN_PORT: 80
-    ports:
-      - "5050:80"
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    networks:
-      prod_net:
-        ipv4_address: 172.30.0.3
-    depends_on:
-      - db
-    restart: unless-stopped
+  # pgadmin:
+  #   image: dpage/pgadmin4:latest
+  #   container_name: pgadmin4_container
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
+  #     PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-adminsecret}
+  #     PGADMIN_LISTEN_PORT: 80
+  #   ports:
+  #     - "5050:80"
+  #   volumes:
+  #     - pgadmin_data:/var/lib/pgadmin
+  #   networks:
+  #     prod_net:
+  #       ipv4_address: 172.30.0.3
+  #   depends_on:
+  #     - db
+  #   restart: unless-stopped
 
 # --------------------------- BUSINESS LOGIC API ---------------------------- #
+  rfm_generator:
+    build:
+      context: .
+      dockerfile: ./RFM_table_generator/Dockerfile
+    container_name: rfm_generator
+    environment:
+      - NETWORK_LOG_DIR=network_logs
+      - OUTPUT_FILE=./RFM_table/rfm_scores.csv
+      - INTERVAL_SECONDS = 3600
+      - TIMESTAMP_COLUMN =timestamp
+      - IP_COLUMN = client_ip
+      - MONETARY_COLUMN = http_body_length
+      - DATE_FORMAT=isoformat
+    volumes:
+      - ./RFM_table_generator:/app
+      - ./network_logs:/app/network_logs
+      - ./RFM_table:/app/RFM_table
+    
   rfm_manager:
     build:
       context: .
@@ -100,8 +118,9 @@ services:
     networks:
       prod_net:
         ipv4_address: 172.30.0.4
-    depends_on:
-      - db
+    # depends_on:
+    #   - rfm_generator
+      # - db
     restart: unless-stopped
     
 
@@ -130,6 +149,8 @@ services:
     restart: unless-stopped
     volumes:
       - ./network_logs:/app/network_logs
+    depends_on:
+      - rfm_generator
 
 # ----------------------------- LOCUST ATTACKERS ---------------------------- #
   attacker:
