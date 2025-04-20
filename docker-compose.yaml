@@ -1,5 +1,35 @@
-# version: '3.8'
+version: "3.8"
 
+###############################################################################
+#                               NETWORKS                                     #
+###############################################################################
+networks:
+  prod_net:                            # DMZ – everything you’re protecting
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+          gateway: 172.30.0.1
+
+  attack_net:                          # “Internet” – all Locust attackers
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.31.0.0/24
+          gateway: 172.31.0.1
+
+###############################################################################
+#                               VOLUMES                                      #
+###############################################################################
+volumes:
+  postgres_data:
+  pgadmin_data:
+
+###############################################################################
+#                               SERVICES                                     #
+###############################################################################
+
+# --------------------------- DATABASE & TOOLS ------------------------------ #
 services:
   db:
     image: postgres:15
@@ -11,13 +41,14 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - app_network
+      prod_net:
+        ipv4_address: 172.30.0.2
     restart: unless-stopped
-    healthcheck: 
-        test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user} -d ${POSTGRES_DB:-mydatabase}"]
-        interval: 10s
-        timeout: 5s
-        retries: 5
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user} -d ${POSTGRES_DB:-mydatabase}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -26,34 +57,34 @@ services:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-adminsecret}
       PGADMIN_LISTEN_PORT: 80
-    ports: 
-      - 5050:80
-    volumes: 
+    ports:
+      - "5050:80"
+    volumes:
       - pgadmin_data:/var/lib/pgadmin
-    networks: 
-      - app_network
-    depends_on: { db: { condition: service_healthy } }
+    networks:
+      prod_net:
+        ipv4_address: 172.30.0.3
+    depends_on:
+      - db
     restart: unless-stopped
 
+# --------------------------- BUSINESS LOGIC API ---------------------------- #
   rfm_manager:
-    build: ./RFM_management
+    build:
+      context: .
+      dockerfile: ./RFM_management/Dockerfile
     container_name: rfm_manager
     environment:
-      # --- Database ---
       POSTGRES_DB: ${POSTGRES_DB:-mydatabase}
       POSTGRES_USER: ${POSTGRES_USER:-user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_HOST: db
       POSTGRES_PORT: 5432
-      # --- Verification & Session ---
       TOKEN_EXPIRATION_MINUTES: ${TOKEN_EXPIRATION_MINUTES:-30}
       APP_SECRET_KEY: ${APP_SECRET_KEY:-c3eea4e72ec11981e2c48798c13f634679b7c955433ae647}
-      # --- reCAPTCHA v2 ---
       RECAPTCHA_SITE_KEY: 6LcvnhorAAAAACkm2jzB1gGUvDkHgFGrHbRDi5R6
       RECAPTCHA_SECRET_KEY: 6LcvnhorAAAAAN8BYM_6Bklvojrtrm9eOxhcHV2b
-      # --- RFM Threshold ---
       RFM_COMPOSITE_THRESHOLD: ${RFM_COMPOSITE_THRESHOLD:-400.0}
-      # --- Other App Config ---
       PYTHONUNBUFFERED: 1
       LOG_DATA_PATH: /app/network_logs/*.csv
       LOG_DATA_FORMAT: csv
@@ -62,45 +93,214 @@ services:
     volumes:
       - ./RFM_management:/app
       - ./network_logs:/app/network_logs
-      # - ./templates:/app/templates # Mount templates (optional, usually copied in Dockerfile)
-      - ../Database:/app/
+      - ../Database:/app
     ports:
       - "${API_PORT:-8000}:8000"
     networks:
-      - app_network
+      prod_net:
+        ipv4_address: 172.30.0.4
     depends_on:
-      db: { condition: service_healthy }
-    # Command is in Dockerfile
+      - db
     restart: unless-stopped
 
+# ----------------------------- TARGET WEB APP ------------------------------ #
   web:
     build:
-      context: ./verify # Use the Dockerfile in the current directory
-      # Optional: Pass build arguments like the port
-
+      context: .
+      dockerfile: ./verify/Dockerfile
+    container_name: flask_recaptcha_app
     environment:
-      # --- reCAPTCHA v2 ---
       APP_SECRET_KEY: ${APP_SECRET_KEY:-c3eea4e72ec11981e2c48798c13f634679b7c955433ae647}
       RECAPTCHA_SITE_KEY: 6LcvnhorAAAAACkm2jzB1gGUvDkHgFGrHbRDi5R6
       RECAPTCHA_SECRET_KEY: 6LcvnhorAAAAAN8BYM_6Bklvojrtrm9eOxhcHV2b
-    container_name: flask_recaptcha_app # Optional: A friendly name for the container
     ports:
-      # Map port 5000 on the host to the FLASK_RUN_PORT inside the container
-      # The internal port comes from the .env file (defaulting to 5000 if not set)
       - "5000:${FLASK_RUN_PORT:-5000}"
-    volumes:
-      - ./verify:/app
     env_file:
-      - .env # Load environment variables from the .env file
-    restart: unless-stopped # Optional: Policy for restarting the container
-    networks: # Optional: Define networks if connecting to other services (like a DB)
-      - app_network
-      - ../Database:/app/
+      - .env
+    networks:
+      prod_net:
+        ipv4_address: 172.30.0.5
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
 
-networks:
-  app_network:
-    driver: bridge
+# ----------------------------- LOCUST ATTACKERS ---------------------------- #
+  attacker:
+    build: ./locust
+    # no container_name → allows --scale
+    cap_add:
+      - NET_ADMIN
+    command: >
+      sh -c '
+        ip route add 172.30.0.0/24 via 172.31.0.254 &&
+        locust -f locustfile.py --headless -u 250 -r 100 --host=http://172.30.0.5:5000/sensitive-data
+      '
+    networks:
+      - attack_net
+    depends_on:
+      - router         # wait until the route target exists
+    restart: unless-stopped
 
-volumes:
-  postgres_data:
-  pgadmin_data:
+# ------------------------------- EDGE ROUTER ------------------------------- #
+  router:
+    image: alpine
+    container_name: router
+    cap_add: [NET_ADMIN]
+    sysctls:
+      - net.ipv4.ip_forward=1
+    command: >
+      sh -c '
+        apk add --no-cache iptables &&
+        iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE &&
+        iptables -A FORWARD -i eth0 -o eth1 -m state --state RELATED,ESTABLISHED -j ACCEPT &&
+        iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE &&
+        iptables -A FORWARD -i eth1 -o eth0 -j ACCEPT &&
+        tail -f /dev/null
+      '
+    networks:
+      prod_net:
+        ipv4_address: 172.30.0.254   # inside DMZ
+      attack_net:
+        ipv4_address: 172.31.0.254   # inside Internet
+    restart: unless-stopped
+# # version: '3.8
+# networks:
+#   app_network:
+#     driver: bridge
+#     ipam:
+#       driver: default
+#       config:
+#         - subnet: 172.30.0.0/24
+#           gateway: 172.30.0.1
+#         - subnet: 172.31.0.0/24
+#           gateway: 172.31.0.1
+#         - subnet: 172.32.0.0/24
+#           gateway: 172.32.0.1
+
+# services:
+#   db:
+#     image: postgres:15
+#     container_name: postgres_db
+#     environment:
+#       POSTGRES_DB: ${POSTGRES_DB:-mydatabase}
+#       POSTGRES_USER: ${POSTGRES_USER:-user}
+#       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+#     networks:
+#       app_network:
+#         ipv4_address: 172.30.0.2
+#     restart: unless-stopped
+#     healthcheck: 
+#         test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user} -d ${POSTGRES_DB:-mydatabase}"]
+#         interval: 10s
+#         timeout: 5s
+#         retries: 5
+
+#   pgadmin:
+#     image: dpage/pgadmin4:latest
+#     container_name: pgadmin4_container
+#     environment:
+#       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
+#       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-adminsecret}
+#       PGADMIN_LISTEN_PORT: 80
+#     ports: 
+#       - 5050:80
+#     volumes: 
+#       - pgadmin_data:/var/lib/pgadmin
+#     networks: 
+#       app_network:
+#         ipv4_address: 172.30.0.3
+#     depends_on: { db: { condition: service_healthy } }
+#     restart: unless-stopped
+
+#   rfm_manager:
+#     build: 
+#       dockerfile: ./RFM_management/Dockerfile
+#       context: .
+#     container_name: rfm_manager
+#     environment:
+#       # --- Database ---
+#       POSTGRES_DB: ${POSTGRES_DB:-mydatabase}
+#       POSTGRES_USER: ${POSTGRES_USER:-user}
+#       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+#       POSTGRES_HOST: db
+#       POSTGRES_PORT: 5432
+#       # --- Verification & Session ---
+#       TOKEN_EXPIRATION_MINUTES: ${TOKEN_EXPIRATION_MINUTES:-30}
+#       APP_SECRET_KEY: ${APP_SECRET_KEY:-c3eea4e72ec11981e2c48798c13f634679b7c955433ae647}
+#       # --- reCAPTCHA v2 ---
+#       RECAPTCHA_SITE_KEY: 6LcvnhorAAAAACkm2jzB1gGUvDkHgFGrHbRDi5R6
+#       RECAPTCHA_SECRET_KEY: 6LcvnhorAAAAAN8BYM_6Bklvojrtrm9eOxhcHV2b
+#       # --- RFM Threshold ---
+#       RFM_COMPOSITE_THRESHOLD: ${RFM_COMPOSITE_THRESHOLD:-400.0}
+#       # --- Other App Config ---
+#       PYTHONUNBUFFERED: 1
+#       LOG_DATA_PATH: /app/network_logs/*.csv
+#       LOG_DATA_FORMAT: csv
+#       API_HOST: 0.0.0.0
+#       API_PORT: 8000
+#     volumes:
+#       - ./RFM_management:/app
+#       - ./network_logs:/app/network_logs
+#       - ../Database:/app
+#       # - ./templates:/app/templates # Mount templates (optional, usually copied in Dockerfile)
+      
+#     ports:
+#       - "${API_PORT:-8000}:8000"
+#     networks:
+#       app_network:
+#         ipv4_address: 172.30.0.4
+#     depends_on:
+#       db: { condition: service_healthy }
+#     # Command is in Dockerfile
+#     restart: unless-stopped
+
+#   web:
+#     build:
+#       context: . # Use the Dockerfile in the current directory
+#       dockerfile: ./verify/Dockerfile
+#       # Optional: Pass build arguments like the port
+
+#     environment:
+#       # --- reCAPTCHA v2 ---
+#       APP_SECRET_KEY: ${APP_SECRET_KEY:-c3eea4e72ec11981e2c48798c13f634679b7c955433ae647}
+#       RECAPTCHA_SITE_KEY: 6LcvnhorAAAAACkm2jzB1gGUvDkHgFGrHbRDi5R6
+#       RECAPTCHA_SECRET_KEY: 6LcvnhorAAAAAN8BYM_6Bklvojrtrm9eOxhcHV2b
+#     container_name: flask_recaptcha_app # Optional: A friendly name for the container
+#     ports:
+#       # Map port 5000 on the host to the FLASK_RUN_PORT inside the container
+#       # The internal port comes from the .env file (defaulting to 5000 if not set)
+#       - "5000:${FLASK_RUN_PORT:-5000}"
+#     # volumes:
+#       # - ./verify:/app
+#       # - ../Database:/app/
+#     env_file:
+#       - .env # Load environment variables from the .env file
+#     restart: unless-stopped # Optional: Policy for restarting the container
+#     networks: # Optional: Define networks if connecting to other services (like a DB)
+#       app_network:
+#         ipv4_address: 172.30.0.5
+
+#   attacker1:
+#     build: ./locust
+#     container_name: attacker1
+#     networks:
+#       app_network:
+#         ipv4_address: 172.31.0.11
+#     depends_on:
+#       - target_app
+#     command: ["locust", "-f", "locustfile.py", "--headless", "-u", "50", "-r", "10", "--host=http://web:5000"]
+
+#   attacker2:
+#     build: ./locust
+#     container_name: attacker2
+#     networks:
+#       app_network:
+#         ipv4_address: 172.31.0.12
+#     depends_on:
+#       - target_app
+#     command: ["locust", "-f", "locustfile.py", "--headless", "-u", "50", "-r", "10", "--host=http://web:5000"]

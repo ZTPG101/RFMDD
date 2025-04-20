@@ -12,16 +12,15 @@ WORKDIR /app
 # RUN apt-get update && apt-get install -y --no-install-recommends some-package && rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file into the container at /app
-COPY requirements.txt .
-
+# COPY requirements.txt .
+COPY ./verify .
 # Install any needed packages specified in requirements.txt
 # Use --no-cache-dir to reduce image size
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code into the container at /app
 # This includes app.py and the templates/ directory
-COPY . .
-
+COPY ./Database/database_utils.py .
 # Make port defined by FLASK_RUN_PORT available to the host
 # Note: This EXPOSE is informational; the actual port mapping happens in docker-compose.yaml
 # We use an ARG to get the port from the build context or default, then set an ENV

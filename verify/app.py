@@ -102,7 +102,7 @@ def index():
     """Simple landing page."""
     return render_template('index.html')
 
-@app.route('/sensitive-data')
+@app.route('/sensitive-data', strict_slashes=False)
 def sensitive_data():
     """This is the route we want to protect."""
     client_ip = request.remote_addr
