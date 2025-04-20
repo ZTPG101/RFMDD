@@ -51,9 +51,10 @@ def compute_rfm(df: pd.DataFrame, now: pd.Timestamp, ts_col: str, ip_col: str, m
     """Return a DataFrame with R, F, (optional) M for each IP."""
 
     # Recency (days since last event per IP)
-    recency = (now - df.groupby(ip_col)[ts_col].max()).dt.total_seconds() / 86_400
+    recency = (now - df.groupby(ip_col)[ts_col].max()).dt.total_seconds() / 86_400 # .dt.second()
+    logging.info(df.groupby(ip_col)[ts_col].max())
+    logging.info(recency)
     recency = recency.rename("recency_days")
-
     # Frequency (number of events)
     frequency = df.groupby(ip_col)[ts_col].count().rename("frequency")
 
@@ -97,9 +98,9 @@ def load_logs(directory: str, ts_col: str, date_format: str | None) -> pd.DataFr
         raise KeyError(f"Timestamp column '{ts_col}' not present in data.")
 
     if date_format:
-        df[ts_col] = pd.to_datetime(df[ts_col], format=date_format, errors="coerce")
+        df[ts_col] = pd.to_datetime(df[ts_col])
     else:
-        df[ts_col] = pd.to_datetime(df[ts_col], errors="coerce")
+        df[ts_col] = pd.to_datetime(df[ts_col])
 
      # Normalise to UTC and then strip tz to get naive UTC
     # if df[ts_col].dt.tz is None:
