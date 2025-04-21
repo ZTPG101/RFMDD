@@ -1,7 +1,7 @@
 # Core FastAPI & Server
 fastapi
 uvicorn[standard]
-
+pandas
 # Database (PostgreSQL driver + SQLAlchemy ORM)
 psycopg2-binary
 SQLAlchemy

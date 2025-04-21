@@ -15,9 +15,11 @@ app.secret_key = os.getenv("APP_SECRET_KEY", 'a-fallback-secret-key-for-dev') # 
 RECAPTCHA_SITE_KEY = os.getenv("RECAPTCHA_SITE_KEY")
 RECAPTCHA_SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY")
 RECAPTCHA_VERIFY_URL = 'https://www.google.com/recaptcha/api/siteverify'
-
+FASTAPI_BASE_URL = os.getenv("FASTAPI_BASE_URL")
 TIME_WINDOW = 60
-MAX_REQUESTS = 100 # Lowered for easier testing/simulation if needed
+MAX_REQUESTS = 10 # Lowered for easier testing/simulation if needed
+RFM_ENDPOINT      = "/rfm"                       # FastAPI route
+TIMEOUT_SECONDS   = 1.5  
 
 # --- Logging Configuration ---
 LOG_DIR = 'network_logs' # Directory to store logs (relative to app.py)
@@ -112,19 +114,74 @@ def is_potential_ddos(client_ip, request_path):
         count = ip_tracker[client_ip]['count']
         if count > MAX_REQUESTS:
             print(f"!!! Potential DDoS detected !!! IP: {client_ip} exceeded {MAX_REQUESTS} requests in {TIME_WINDOW}s (Count: {count})")
-            return True
+            if is_ddos_lookup_RFM(client_ip):
+                print(f"from RFM look up {client_ip} seem to be new user with high fequency/capacity mark as supecious and begin rate limit")
+                return True
+            else:
+                print(f"from RFM look up this seem to be large just subnet continue allow IP: {client_ip}")
+                return False
         else:
             print("Request deemed not suspicious.")
             return False
 
 # --- Placeholder for RFM/Other Logic (Keep as is) ---
-def is_ddos_lookup_RFM(client_ip, request_path):
+def is_ddos_lookup_RFM(client_ip):
     # (Your existing placeholder function - unchanged)
     # ... (Keep the function exactly as you had it) ...
-    print(f"Checking request from {client_ip} to {request_path}")
+    print(f"Checking request from {client_ip}")
     if client_ip == '127.0.0.1':
          print("IP matches example condition, flagging as potential DDoS.")
          return True
+    try:
+        url      = f"{FASTAPI_BASE_URL}{RFM_ENDPOINT}"
+        # FastAPI returns plain text ("true"/"false"/"notfound") or JSON
+        payload = {
+            "ip_address": client_ip
+        }
+        headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json' # Indicate we prefer JSON response
+        }
+
+        try:
+            response = requests.post(
+                url,
+                json=payload,       # requests handles json serialization and Content-Type
+                headers=headers,    # Still good to include Accept header
+                timeout=TIMEOUT_SECONDS
+            )
+
+            # Raise an exception for bad status codes (4xx or 5xx)
+            response.raise_for_status()
+
+            # If successful (2xx status code), parse the JSON response
+            result_data = response.json()
+            app.logger.debug(f"[RFM-lookup] Received JSON response: {result_data}")
+
+            # Extract the 'suspicious' field safely using .get()
+            suspicious = bool(result_data.get("suspicious", False)) # Default to False if key missing
+
+            app.logger.info(f"[RFM-lookup] RFM service indicated suspicious={suspicious} for IP {client_ip}")
+            return suspicious
+        except:
+            print("error rfm look up")
+            return False 
+
+    except requests.exceptions.HTTPError as http_err:
+
+        # Accept either format
+        if isinstance(payload, dict):
+            suspicious = bool(payload.get("suspicious"))
+        else:
+            suspicious = (payload == "true")
+
+        print(f"[RFM‑lookup] FastAPI said suspicious={suspicious}")
+        return suspicious
+
+    except requests.RequestException as exc:
+        # Network / FastAPI error – log and allow traffic by default
+        print(f"[RFM‑lookup] ERROR contacting RFM service: {exc}")
+        return False
     print("Request deemed not suspicious.")
     return False
 
@@ -142,6 +199,7 @@ def sensitive_data():
         print("User already verified in this session.")
         return render_template('sensitive_page.html', message="Access granted (already verified).") # Assuming sensitive_page.html
     if is_potential_ddos(client_ip, request.path):
+
         print("Potential DDoS detected. Redirecting to CAPTCHA.")
         session['intended_url'] = request.url
         return redirect(url_for('verify_captcha_page'))
